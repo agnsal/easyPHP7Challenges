@@ -156,10 +156,10 @@ function minimumGroups($predators) {
     $predatorsClass= [];
     $predatorsLen = count($predators);
     for($i=0; $i<$predatorsLen; $i++){
-        echo("Predators of {$i}\n"); // Test
+        // echo("Predators of {$i}\n"); // Test
         $predatorsClass[$i] = [];
         $predatorCursor = $predators[$i];
-        echo("\t{$predatorCursor} is a direct predator of {$i}\n"); // Test
+        // echo("\t{$predatorCursor} is a direct predator of {$i}\n"); // Test
         while($predatorCursor != -1){
             array_push($predatorsClass[$i], $predatorCursor);
             $predatorCursor = $predators[$predatorCursor];
