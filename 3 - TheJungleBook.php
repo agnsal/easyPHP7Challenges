@@ -153,8 +153,8 @@ The animals form a minimal two species groups: [0, 2] and [1, 3].
 
 
 function printMatrix($matrix){
-    foreach($matrix as $row){
-        echo(json_encode($row)."\n");
+    foreach($matrix as $k => $row){
+        echo("#{$k}: ".json_encode($row)."\n");
     }
 }
 
@@ -176,87 +176,49 @@ function getAllSpeciesPredator($predators){
     return $result;
 }
 
-function findCompatible($specie, $allSpeciesPredators){
-    $speciePredators = $allSpeciesPredators[$specie];
-    $result = ['compatible' => null, 'allPredators' => $speciePredators];
-    foreach ($allSpeciesPredators as $otherS => $otherSp) {
-        if($specie !== $otherS && !in_array($otherS, $speciePredators) && !in_array($specie, $otherSp)){
-            if(0 === count(array_diff($allSpeciesPredators[$specie], $otherSp))){
-                $result['compatible'] = $otherS;
-                $result['allPredators'] = $otherSp;
-                return $result;
-            }
-        }
+function getAllSpeciesFriends($allSpeciesPredators, $predators){
+    $compatibles = [];
+    foreach ($allSpeciesPredators as $s => $sp){
+        $compatibles[$s] = array_values(array_unique(array_diff(array_diff(array_keys($predators), $sp), [$s])));
     }
-    return $result;
+    return $compatibles;
 }
 
-//function findCompatibleUnstable($specie, $allSpeciesPredators){
-//    $speciePredators = $allSpeciesPredators[$specie];
-//    $result = ['compatible' => null, 'allPredators' => $speciePredators];
-//    $best = null;
-//    $bestDiff = count($allSpeciesPredators);
-//    foreach ($allSpeciesPredators as $otherS => $otherSp) {
-//        if($specie !== $otherS && !in_array($otherS, $speciePredators) && !in_array($specie, $otherSp)){
-//            $diff = count(array_diff($allSpeciesPredators[$specie], $otherSp));
-//            if(0 === $diff){
-//                $result['compatible'] = $otherS;
-//                $result['allPredators'] = $otherSp;
-//                return $result;
-//            }
-//            if($diff < $bestDiff){
-//                $bestDiff = $diff;
-//                $best = [$otherS, $otherSp];
-//            }
-//            $result['compatible'] = $best[0];
-//            $result['allPredators'] = $best[1];
-//        }
-//    }
-//    return $result;
-//}
-
-function getSafeGroupsPredators($predators, $allSpeciesPredators){
-    $toBeProcessed = count($predators);
-    while($toBeProcessed > 0){
-        foreach ($allSpeciesPredators as $s => $sp){
-            $compatible = findCompatible($s, $allSpeciesPredators);
-            if(null !== $compatible['compatible']){
-                $allSpeciesPredators[$s] = $compatible['allPredators'];
-                $allSpeciesPredators[$compatible['compatible']] = $compatible['allPredators'];
-                $toBeProcessed -= 2;
-            }
-        }
-    };
-    return $allSpeciesPredators;
-}
-
-
-
-function getSafeGroups($predators, $allSpeciesPredators){
+function makeOrder($predators){
+    $allSP = getAllSpeciesPredator($predators);
+    $speciesPredators = getAllSpeciesPredator($predators);
+    print("\nAll Species Predators:\n");
+    printMatrix($speciesPredators);
+    print("\n-------\n");
+    $compatibles = getAllSpeciesFriends($allSP, $predators);
+    print("\nCompatibles:\n");
+    printMatrix($compatibles);
+    print("\n-------\n");
+    $processed = [];
     $result = [];
-    $semiprocessed = getSafeGroupsPredators($predators, $allSpeciesPredators);
-//    printMatrix($semiprocessed);
-//    print("\n");
-    foreach ($semiprocessed as $k => $v){
-        $partialRes = [$k];
-        foreach ($semiprocessed as $otherK => $otherV){
-            $d = count(array_diff($v, $otherV)) + count(array_diff($otherV, $v));
-            if($k !== $otherK && 0 === $d){
-                $partialRes[] = $otherK;
+    foreach ($compatibles as $c => $others){
+        if(!in_array($c, $processed)) {
+            $processed[] = $c;
+            $r = [$c];
+            $undesired = [];
+            foreach ($others as $o) {
+              if (!in_array($o, $undesired) && !in_array($o, $processed) && in_array($c, $compatibles[$o])) {
+                    $r[] = $o;
+                    $processed[] = $o;
+                    $undesired[] = $predators[$o];
+//                    print(json_encode($processed));
+                }
             }
-        }
-        sort($partialRes);
-        if(!in_array($partialRes, $result)){
-            $result[] = array_unique($partialRes);
+            $result[] = array_values(array_unique($r));
         }
     }
-    return $result;
+    print("\nRESULT:\n");
+    printMatrix($result);
+    print("\n-------\n");
 }
-
 
 //$fptr = fopen(__DIR__.'/TheJungleBoox.txt', "w");
 
 $predators = [-1, 8, 6, 0, 7, 3, 8, 9, -1, 6];
 
-$speciesPredators = getAllSpeciesPredator($predators);
-printMatrix(getSafeGroups($predators, $speciesPredators));
+makeOrder($predators);
