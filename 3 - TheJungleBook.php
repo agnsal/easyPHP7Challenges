@@ -225,24 +225,9 @@ function getSafeGroups($predators, $allSpeciesPredators){
 }
 
 
-$fptr = fopen(__DIR__.'/TheJungleBoox.txt', "w");
+//$fptr = fopen(__DIR__.'/TheJungleBoox.txt', "w");
 
-//$predators_count = intval(trim(fgets(STDIN)));
-/*
-$predators = array();
-
-for ($i = 0; $i < $predators_count; $i++) {
-	$predators_item = intval(trim(fgets(STDIN)));
-	$predators[] = $predators_item;
-}*/
 $predators = [-1, 8, 6, 0, 7, 3, 8, 9, -1, 6];
 
 $speciesPredators = getAllSpeciesPredator($predators);
 printMatrix(getSafeGroups($predators, $speciesPredators));
-
-
-//$result = minimumGroups($predators);
-
-//fwrite($fptr, $result . "\n");
-
-//fclose($fptr);
