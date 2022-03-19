@@ -1,7 +1,7 @@
 <?php
 
 /**
-Copyright 2021 Agnese Salutari.
+Copyright 2021-2022 Agnese Salutari.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -152,24 +152,77 @@ The animals form a minimal two species groups: [0, 2] and [1, 3].
  */
 
 
-function minimumGroups($predators) {
-    $predatorsClass= [];
-    $predatorsLen = count($predators);
-    for($i=0; $i<$predatorsLen; $i++){
-        // echo("Predators of {$i}\n"); // Test
-        $predatorsClass[$i] = [];
-        $predatorCursor = $predators[$i];
-        // echo("\t{$predatorCursor} is a direct predator of {$i}\n"); // Test
-        while($predatorCursor != -1){
-            array_push($predatorsClass[$i], $predatorCursor);
-            $predatorCursor = $predators[$predatorCursor];
-        }
+function printMatrix($matrix){
+    foreach($matrix as $row){
+        echo(json_encode($row)."\n");
     }
-    return json_encode($predatorsClass);
 }
 
+function getSpeciePredators($predators, $specie){
+    $result = [];
+    $nextPredator = $predators[$specie];
+    while(-1 !== $nextPredator){
+        $result[] = $nextPredator;
+        $nextPredator = $predators[$nextPredator];
+    }
+    return $result;
+}
 
+function getAllSpeciesPredator($predators){
+    $result = [];
+    foreach($predators as $prey => $predator){
+        $result[$prey] = getSpeciePredators($predators, $prey);
+    }
+    return $result;
+}
 
+function findCompatible($specie, $allSpeciesPredators){
+    $result = ['compatible' => null, 'allPredators' => $allSpeciesPredators[$specie]];
+    foreach ($allSpeciesPredators as $otherS => $otherSp) {
+        if($specie !== $otherS){
+            if(0 === count(array_diff($allSpeciesPredators[$specie], $otherSp))){
+                $result['compatible'] = $otherS;
+                $result['allPredators'] = $otherSp;
+                return $result;
+            }
+        }
+    }
+    return $result;
+}
+
+function getSafeGroupsPredators($predators, $allSpeciesPredators){
+    $toBeProcessed = count($predators);
+    while($toBeProcessed > 0){
+        foreach ($allSpeciesPredators as $s => $sp){
+            $compatible = findCompatible($s, $allSpeciesPredators);
+            if(null !== $compatible['compatible']){
+                $allSpeciesPredators[$s] = $compatible['allPredators'];
+                $allSpeciesPredators[$compatible['compatible']] = $compatible['allPredators'];
+                $toBeProcessed -= 2;
+            }
+        }
+    };
+    return $allSpeciesPredators;
+}
+
+function getSafeGroups($predators, $allSpeciesPredators){
+    $result = [];
+    $semiprocessed = getSafeGroupsPredators($predators, $allSpeciesPredators);
+    foreach ($semiprocessed as $k => $v){
+        $partialRes = [$k];
+        foreach ($semiprocessed as $otherK => $otherV){
+            $d = count(array_diff($v, $otherV)) + count(array_diff($otherV, $v));
+            if($k !== $otherK && 0 === $d){
+                $partialRes[] = $otherK;
+            }
+        }
+        sort($partialRes);
+        if(!in_array($partialRes, $result)){
+            $result[] = array_unique($partialRes);
+        }
+    }
+    return $result;
+}
 
 
 $fptr = fopen(__DIR__.'/TheJungleBoox.txt', "w");
@@ -184,8 +237,12 @@ for ($i = 0; $i < $predators_count; $i++) {
 }*/
 $predators = [-1, 8, 6, 0, 7, 3, 8, 9, -1, 6];
 
-$result = minimumGroups($predators);
+$speciesPredators = getAllSpeciesPredator($predators);
+printMatrix(getSafeGroups($predators, $speciesPredators));
 
-fwrite($fptr, $result . "\n");
 
-fclose($fptr);
+//$result = minimumGroups($predators);
+
+//fwrite($fptr, $result . "\n");
+
+//fclose($fptr);
