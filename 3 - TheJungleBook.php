@@ -168,29 +168,24 @@ function getSpeciePredators($predators, $specie){
     return $result;
 }
 
-function getAllSpeciesPredator($predators){
-    $result = [];
-    foreach($predators as $prey => $predator){
-        $result[$prey] = getSpeciePredators($predators, $prey);
+function getAllSpeciesPredatorsAndFriends($predatorsArray){
+    $predators = [];
+    $friends = [];
+    foreach($predatorsArray as $prey => $predator){
+        $preyPredators = getSpeciePredators($predatorsArray, $prey);
+        $predators[$prey] = $preyPredators;
+        $friends[$prey] = array_values(array_unique(array_diff(array_diff(array_keys($predatorsArray), $preyPredators), [$prey])));
     }
-    return $result;
-}
-
-function getAllSpeciesFriends($allSpeciesPredators, $predators){
-    $compatibles = [];
-    foreach ($allSpeciesPredators as $s => $sp){
-        $compatibles[$s] = array_values(array_unique(array_diff(array_diff(array_keys($predators), $sp), [$s])));
-    }
-    return $compatibles;
+    return ['predators' => $predators, 'friends' => $friends];
 }
 
 function makeOrder($predators){
-    $allSP = getAllSpeciesPredator($predators);
-    $speciesPredators = getAllSpeciesPredator($predators);
+    $speciesPredatorsAndFriends = getAllSpeciesPredatorsAndFriends($predators);
+    $speciesPredators = $speciesPredatorsAndFriends['predators'];
     print("\nAll Species Predators:\n");
     printMatrix($speciesPredators);
     print("\n-------\n");
-    $compatibles = getAllSpeciesFriends($allSP, $predators);
+    $compatibles = $speciesPredatorsAndFriends['friends'];
     print("\nCompatibles:\n");
     printMatrix($compatibles);
     print("\n-------\n");
@@ -206,7 +201,6 @@ function makeOrder($predators){
                     $r[] = $o;
                     $processed[] = $o;
                     $undesired[] = $predators[$o];
-//                    print(json_encode($processed));
                 }
             }
             $result[] = array_values(array_unique($r));
