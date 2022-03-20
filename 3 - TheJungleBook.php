@@ -154,7 +154,7 @@ The animals form a minimal two species groups: [0, 2] and [1, 3].
 
 function printMatrix($matrix){
     foreach($matrix as $k => $row){
-        echo("#{$k}: ".json_encode($row)."\n");
+        echo("#{$k}: ".json_encode(array_values($row))."\n");
     }
 }
 
@@ -174,7 +174,7 @@ function getAllSpeciesPredatorsAndFriends($predatorsArray){
     foreach($predatorsArray as $prey => $predator){
         $preyPredators = getSpeciePredators($predatorsArray, $prey);
         $predators[$prey] = $preyPredators;
-        $friends[$prey] = array_values(array_unique(array_diff(array_diff(array_keys($predatorsArray), $preyPredators), [$prey])));
+        $friends[$prey] = array_unique(array_diff(array_diff(array_keys($predatorsArray), $preyPredators), [$prey]));
     }
     return ['predators' => $predators, 'friends' => $friends];
 }
@@ -203,7 +203,7 @@ function makeOrder($predators){
                     $undesired[] = $predators[$o];
                 }
             }
-            $result[] = array_values(array_unique($r));
+            $result[] = array_unique($r);
         }
     }
     print("\nRESULT:\n");
